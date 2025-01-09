@@ -303,6 +303,15 @@ func (c *DeploymentController) syncManaged(ctx context.Context, opSpec *opv1.Ope
 		status = status.WithConditions(progressingCondition)
 	}
 
+	// Degrade when operator is progressing too long.
+	progressingTooLong, err := v1helpers.IsUpdatingTooLong(opStatus, c.instanceName+opv1.OperatorStatusTypeProgressing)
+	if err != nil {
+		return err
+	}
+	if progressingTooLong {
+		return fmt.Errorf("deployment was progressing too long")
+	}
+
 	return c.operatorClient.ApplyOperatorStatus(
 		ctx,
 		c.controllerInstanceName,
