@@ -559,5 +559,8 @@ func IsConditionPresentAndEqual(conditions []metav1.Condition, conditionType str
 // it returns true if the progressing condition has been set to True for at least 15 minutes
 func IsUpdatingTooLong(operatorStatus *operatorv1.OperatorStatus, progressingConditionType string) (bool, error) {
 	progressing := FindOperatorCondition(operatorStatus.Conditions, progressingConditionType)
+	if progressing == nil {
+		return false, fmt.Errorf("operator status does not have %s condition", progressingConditionType)
+	}
 	return progressing != nil && progressing.Status == operatorv1.ConditionTrue && time.Now().After(progressing.LastTransitionTime.Add(progressingConditionTimeout)), nil
 }
